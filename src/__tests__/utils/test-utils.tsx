@@ -1,11 +1,11 @@
-import { ReactElement, ReactNode } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { type ReactElement, type ReactNode } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider } from 'antd';
 import { configureStore, PreloadedState } from '@reduxjs/toolkit';
-import { rootReducer, persistedReducer } from '../../store/store';
+import { persistedReducer } from '../../store/store';
 import type { RootState, AppStore } from '../../store/store';
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
