@@ -1,5 +1,4 @@
-import { expect, afterEach, beforeAll, afterAll } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { expect, beforeAll, afterAll } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 // Extend Vitest matchers with jest-dom
 expect.extend(matchers);
@@ -7,7 +6,7 @@ expect.extend(matchers);
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -32,10 +31,10 @@ global.IntersectionObserver = class IntersectionObserver {
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {}
+  constructor(_callback: ResizeObserverCallback) {}
   disconnect() {}
-  observe(target: Element, options?: ResizeObserverOptions) {}
-  unobserve(target: Element) {}
+  observe(_target: Element, _options?: ResizeObserverOptions) {}
+  unobserve(_target: Element) {}
 } as any;
 
 
