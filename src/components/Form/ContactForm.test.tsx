@@ -1,48 +1,65 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderWithProviders, screen, userEvent, waitFor } from '@/__tests__/utils/test-utils';
-import { LoginForm } from './LoginForm';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { renderWithProviders } from '../../__tests__/utils/test-utils';
+import { ContactForm } from './ContactForm';
 
-describe('LoginForm', () => {
-  it('validates email field', async () => {
+describe('ContactForm', () => {
+  it('renders all form fields', () => {
+    renderWithProviders(<ContactForm />);
+
+    expect(screen.getByRole('textbox', { name: /name/i })).toBeDefined();
+    expect(screen.getByRole('textbox', { name: /email/i })).toBeDefined();
+    expect(screen.getByRole('textbox', { name: /phone/i })).toBeDefined();
+    expect(screen.getByRole('textbox', { name: /message/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /submit contact/i })).toBeDefined();
+  });
+
+  it('validates required fields', async () => {
     const user = userEvent.setup();
-    renderWithProviders();
-    
-    const emailInput = screen.getByLabelText(/email/i);
+    renderWithProviders(<ContactForm />);
+
+    const submitButton = screen.getByRole('button', { name: /submit contact/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/please enter your name/i)).toBeDefined();
+    });
+  });
+
+  it('validates email format', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ContactForm />);
+
+    const emailInput = screen.getByRole('textbox', { name: /email/i });
+
     await user.type(emailInput, 'invalid-email');
     await user.tab();
-    
+
     await waitFor(() => {
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+      expect(screen.getByText(/please enter a valid email address/i)).toBeDefined();
     });
   });
 
-  it('submits form with valid data', async () => {
-    const handleSubmit = vi.fn();
+  it('submits form with valid data and updates Redux store', async () => {
     const user = userEvent.setup();
-    
-    renderWithProviders();
-    
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
-    await user.click(screen.getByRole('button', { name: /login/i }));
-    
-    await waitFor(() => {
-      expect(handleSubmit).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-    });
-  });
+    const onSuccess = vi.fn();
+    const { store } = renderWithProviders(<ContactForm onSuccess={onSuccess} />);
 
-  it('shows loading state during submission', async () => {
-    const user = userEvent.setup();
-    renderWithProviders();
-    
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
-    await user.click(screen.getByRole('button', { name: /login/i }));
-    
-    expect(screen.getByRole('button')).toBeDisabled();
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    // Fill out the form
+    await user.type(screen.getByRole('textbox', { name: /name/i }), 'John Doe');
+    await user.type(screen.getByRole('textbox', { name: /email/i }), 'john@example.com');
+    await user.type(screen.getByRole('textbox', { name: /phone/i }), '1234567890');
+    await user.type(screen.getByRole('textbox', { name: /message/i }), 'This is a test message with enough characters');
+
+    // Submit the form
+    await user.click(screen.getByRole('button', { name: /submit contact/i }));
+
+    await waitFor(() => {
+      const state = store.getState();
+      expect(state.userInformation.contacts.length).toBeGreaterThan(0);
+      expect(state.userInformation.contacts[0].name).toBe('John Doe');
+      expect(state.userInformation.contacts[0].email).toBe('john@example.com');
+    });
   });
 });

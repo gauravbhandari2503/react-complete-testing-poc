@@ -8,6 +8,8 @@ function Header() {
         <ul className="flex gap-6">
           <li><Link to="/" className="text-white hover:text-yellow-300 transition">Home</Link></li>
           <li><Link to="/about" className="text-white hover:text-yellow-300 transition">About</Link></li>
+          <li><Link to="/contact" className="text-white hover:text-yellow-300 transition">Contact</Link></li>
+          <li><Link to="/users" className="text-white hover:text-yellow-300 transition">Users</Link></li>
         </ul>
       </nav>
     </header>

@@ -40,14 +40,15 @@ global.IntersectionObserver = class IntersectionObserver {
   unobserve() {}
 } as any;
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-global.localStorage = localStorageMock as any;
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback: ResizeObserverCallback) {}
+  disconnect() {}
+  observe(target: Element, options?: ResizeObserverOptions) {}
+  unobserve(target: Element) {}
+} as any;
+
+
 
 // Suppress console errors in tests (optional)
 const originalError = console.error;

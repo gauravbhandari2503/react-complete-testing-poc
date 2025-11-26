@@ -1,11 +1,10 @@
-import { User } from '@/types';
+import { type User } from './../../types';
 
 export const mockUser: User = {
   id: '1',
   email: 'test@example.com',
   name: 'Test User',
-  role: 'learner',
-  avatar: 'https://via.placeholder.com/150',
+  contact: 8912930213
 };
 
 export const mockAuthState = {

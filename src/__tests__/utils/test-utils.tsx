@@ -5,15 +5,28 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider } from 'antd';
 import { configureStore, PreloadedState } from '@reduxjs/toolkit';
-import { RootState, AppStore } from '@/store/store';
-import rootReducer from '@/store/rootReducer';
+import { rootReducer, persistedReducer } from '../../store/store';
+import type { RootState, AppStore } from '../../store/store';
 
-// Create a custom render function
-interface ExtendedRenderOptions extends Omit {
-  preloadedState?: PreloadedState;
+interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
+  preloadedState?: PreloadedState<RootState>;
   store?: AppStore;
   queryClient?: QueryClient;
   route?: string;
+}
+
+function Wrapper({ children, store, queryClient }: Readonly<{ children: ReactNode; store: AppStore; queryClient: QueryClient }>) {
+  return (
+    <Provider store={store}>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <ConfigProvider>
+            {children}
+          </ConfigProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
+    </Provider>
+  );
 }
 
 export function renderWithProviders(
@@ -21,7 +34,7 @@ export function renderWithProviders(
   {
     preloadedState = {},
     store = configureStore({
-      reducer: rootReducer,
+      reducer: persistedReducer,
       preloadedState,
     }),
     queryClient = new QueryClient({
@@ -39,24 +52,11 @@ export function renderWithProviders(
     ...renderOptions
   }: ExtendedRenderOptions = {}
 ) {
-  window.history.pushState({}, 'Test page', route);
-
-  function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      
-        
-          
-            {children}
-          
-        
-      
-    );
-  }
-
+  globalThis.history.pushState({}, 'Test page', route);
   return {
     store,
     queryClient,
-    ...render(ui, { wrapper: Wrapper, ...renderOptions }),
+    ...render(ui, { wrapper: (props) => <Wrapper store={store} queryClient={queryClient}>{props.children}</Wrapper>, ...renderOptions }),
   };
 }
 
