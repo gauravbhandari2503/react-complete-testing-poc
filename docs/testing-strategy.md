@@ -18,7 +18,6 @@
 ```bash
 npm install -D vitest @vitest/ui @vitest/coverage-v8 jsdom
 npm install -D @testing-library/react @testing-library/jest-dom @testing-library/user-event
-npm install -D msw@latest
 npm install -D @types/testing-library__jest-dom
 ```
 
@@ -46,13 +45,8 @@ src/
 ├── __tests__/                    # Global test utilities and setup
 │   ├── setup.ts                  # Test setup file
 │   ├── utils/
-│   │   ├── test-utils.tsx        # Custom render functions
-│   │   ├── mock-data.ts          # Shared mock data
-│   │   └── test-helpers.ts       # Helper functions
-│   └── mocks/
-│       ├── handlers.ts           # MSW API handlers
-│       ├── server.ts             # MSW server setup
-│       └── browser.ts            # MSW browser setup
+│   │   └── test-utils.tsx        # Custom render functions
+│
 │
 ├── components/
 │   ├── Button/
@@ -113,7 +107,6 @@ export default defineConfig({
         'src/__tests__/',
         '**/*.d.ts',
         '**/*.config.*',
-        '**/mockData',
         '**/*.stories.tsx',
         'src/main.tsx',
         'dist/',
@@ -150,18 +143,9 @@ export default defineConfig({
 import { expect, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { server } from './mocks/server';
 
 // Extend Vitest matchers with jest-dom
 expect.extend(matchers);
-
-// MSW Server Setup
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterAll(() => server.close());
-afterEach(() => {
-  server.resetHandlers();
-  cleanup();
-});
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -292,97 +276,7 @@ export * from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';
 ```
 
-### src/__tests__/utils/test-helpers.ts
 
-```typescript
-import { waitFor } from '@testing-library/react';
-
-/**
- * Wait for async operations to complete
- */
-export const waitForLoadingToFinish = () =>
-  waitFor(
-    () => {
-      const loadingElements = [
-        ...document.querySelectorAll('[aria-busy="true"]'),
-        ...document.querySelectorAll('[data-testid="loading"]'),
-      ];
-      expect(loadingElements).toHaveLength(0);
-    },
-    { timeout: 3000 }
-  );
-
-/**
- * Create mock file for file upload tests
- */
-export const createMockFile = (
-  name = 'test.png',
-  size = 1024,
-  type = 'image/png'
-): File => {
-  const file = new File(['(⌐□_□)'], name, { type });
-  Object.defineProperty(file, 'size', { value: size });
-  return file;
-};
-
-/**
- * Mock promise that resolves after delay
- */
-export const delay = (ms: number) =>
-  new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Generate mock pagination data
- */
-export const generatePaginatedData = <T>(
-  items: T[],
-  page = 1,
-  pageSize = 10
-) => ({
-  data: items.slice((page - 1) * pageSize, page * pageSize),
-  total: items.length,
-  page,
-  pageSize,
-  totalPages: Math.ceil(items.length / pageSize),
-});
-```
-
-### src/__tests__/utils/mock-data.ts
-
-```typescript
-import { User } from '@/types';
-
-export const mockUser: User = {
-  id: '1',
-  email: 'test@example.com',
-  name: 'Test User',
-  role: 'learner',
-  avatar: 'https://via.placeholder.com/150',
-};
-
-export const mockAuthState = {
-  user: mockUser,
-  token: 'mock-jwt-token',
-  isAuthenticated: true,
-  loading: false,
-  error: null,
-};
-
-export const mockCourse = {
-  id: '1',
-  title: 'React Testing Fundamentals',
-  description: 'Learn testing in React',
-  instructor: 'John Doe',
-  duration: 120,
-  enrolledUsers: 50,
-};
-
-export const mockCourses = Array.from({ length: 20 }, (_, i) => ({
-  ...mockCourse,
-  id: `${i + 1}`,
-  title: `Course ${i + 1}`,
-}));
-```
 
 ---
 
@@ -565,59 +459,7 @@ describe('Auth Slice', () => {
 });
 ```
 
-### 5.5 API Integration Testing with MSW
 
-#### src/__tests__/mocks/handlers.ts
-```typescript
-import { http, HttpResponse } from 'msw';
-import { mockUser, mockCourses } from '../utils/mock-data';
-
-export const handlers = [
-  // Auth endpoints
-  http.post('/api/auth/login', async ({ request }) => {
-    const { email, password } = await request.json();
-    
-    if (email === 'test@example.com' && password === 'password123') {
-      return HttpResponse.json({
-        user: mockUser,
-        token: 'mock-jwt-token',
-      });
-    }
-    
-    return HttpResponse.json(
-      { message: 'Invalid credentials' },
-      { status: 401 }
-    );
-  }),
-
-  // Courses endpoints
-  http.get('/api/courses', () => {
-    return HttpResponse.json({
-      data: mockCourses,
-      total: mockCourses.length,
-    });
-  }),
-
-  http.get('/api/courses/:id', ({ params }) => {
-    const course = mockCourses.find(c => c.id === params.id);
-    if (!course) {
-      return HttpResponse.json(
-        { message: 'Course not found' },
-        { status: 404 }
-      );
-    }
-    return HttpResponse.json(course);
-  }),
-];
-```
-
-#### src/__tests__/mocks/server.ts
-```typescript
-import { setupServer } from 'msw/node';
-import { handlers } from './handlers';
-
-export const server = setupServer(...handlers);
-```
 
 ---
 

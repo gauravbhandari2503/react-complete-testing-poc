@@ -1,18 +1,8 @@
 import { expect, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { server } from './mocks/server';
-
 // Extend Vitest matchers with jest-dom
 expect.extend(matchers);
-
-// MSW Server Setup
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterAll(() => server.close());
-afterEach(() => {
-  server.resetHandlers();
-  cleanup();
-});
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
