@@ -1,9 +1,11 @@
 ---
 agent: 'agent'
 model: Claude Sonnet 4.5 (copilot)
+argument-hint: 'Generate test cases for the provided file as per project conventions'
 tools: ['search/codebase', 'edit']
 description: 'Generate or update test cases for a given file as per project testing strategy'
 ---
+
 Your goal is to generate or update test cases for a given file in this project, following our established testing strategy and patterns.
 
 ## Instructions
